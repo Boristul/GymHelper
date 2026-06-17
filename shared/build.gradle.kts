@@ -41,14 +41,20 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
         }
         commonMain.dependencies {
+            implementation(project(":core:coroutines"))
+            implementation(project(":core:mvi"))
+            implementation(project(":data:workout"))
+            implementation(project(":database"))
+            implementation(project(":domain:workout"))
+            implementation(project(":feature:workout-log"))
             implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
-            implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

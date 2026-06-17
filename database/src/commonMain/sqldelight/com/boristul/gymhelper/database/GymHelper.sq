@@ -1,0 +1,54 @@
+CREATE TABLE workout_session (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL
+);
+
+CREATE TABLE workout_stage (
+    id TEXT NOT NULL PRIMARY KEY,
+    workout_id TEXT NOT NULL REFERENCES workout_session(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    position INTEGER NOT NULL
+);
+
+CREATE TABLE workout_set (
+    id TEXT NOT NULL PRIMARY KEY,
+    stage_id TEXT NOT NULL REFERENCES workout_stage(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    weight_kg REAL NOT NULL,
+    reps INTEGER NOT NULL
+);
+
+selectWorkoutSession:
+SELECT *
+FROM workout_session
+WHERE id = ?;
+
+selectStagesForWorkout:
+SELECT *
+FROM workout_stage
+WHERE workout_id = ?
+ORDER BY position ASC;
+
+selectSetsForStage:
+SELECT *
+FROM workout_set
+WHERE stage_id = ?
+ORDER BY position ASC;
+
+insertWorkoutSession:
+INSERT OR IGNORE INTO workout_session(id, title, status)
+VALUES (?, ?, ?);
+
+updateWorkoutStatus:
+UPDATE workout_session
+SET status = ?
+WHERE id = ?;
+
+insertWorkoutStage:
+INSERT INTO workout_stage(id, workout_id, description, position)
+VALUES (?, ?, ?, ?);
+
+insertWorkoutSet:
+INSERT INTO workout_set(id, stage_id, position, weight_kg, reps)
+VALUES (?, ?, ?, ?, ?);
