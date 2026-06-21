@@ -50,6 +50,16 @@ Feature UI follows a `Route -> Screen -> Content` split:
 
 Reusable visual pieces live in `core:uikit`. Feature-specific cards and rows stay inside the feature until another feature genuinely needs them.
 
+M3 UI conventions:
+
+- Screens use a scaffold with a top app bar for context and bottom actions for primary commands.
+- Page padding follows the shared spacing tokens in `core:uikit` instead of hardcoded per-screen values.
+- Form screens request focus for the first meaningful input.
+- Numeric inputs set explicit keyboard types such as decimal or number.
+- Bottom action bars use IME padding so primary actions remain reachable while the keyboard is open.
+- Text fields define keyboard actions for the happy path, for example next field, add next set, or continue.
+- Form lists scroll newly appended input items into view and move focus to the field most likely to be edited next.
+
 ## MVI shape
 
 The shared layer uses a CMP-friendly interpretation of an Android interactor MVI pattern:
@@ -86,7 +96,7 @@ The current repository keeps a `MutableStateFlow` in front of SQLDelight and rel
 
 ## MVP feature slices
 
-1. Active workout logging: start a workout, add a stage description, record sets with weight and reps, finish the stage.
+1. Active workout logging: start a workout, add/edit/delete stages, record sets with weight and reps, finish the stage.
 2. Set editing: edit saved stage sets or delete mistaken draft/saved sets.
 3. Workout completion: finish a session and persist it locally.
 4. Workout history: browse completed sessions and inspect previous results.

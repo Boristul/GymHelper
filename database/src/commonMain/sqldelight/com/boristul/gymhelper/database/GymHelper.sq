@@ -49,6 +49,24 @@ insertWorkoutStage:
 INSERT INTO workout_stage(id, workout_id, description, position)
 VALUES (?, ?, ?, ?);
 
+updateWorkoutStage:
+UPDATE workout_stage
+SET description = ?
+WHERE id = ?;
+
+updateStagePosition:
+UPDATE workout_stage
+SET position = ?
+WHERE id = ?;
+
+deleteWorkoutStage:
+DELETE FROM workout_stage
+WHERE id = ?;
+
+deleteSetsForStage:
+DELETE FROM workout_set
+WHERE stage_id = ?;
+
 insertWorkoutSet:
 INSERT INTO workout_set(id, stage_id, position, weight_kg, reps)
 VALUES (?, ?, ?, ?, ?);

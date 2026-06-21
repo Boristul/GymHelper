@@ -25,10 +25,12 @@ class WorkoutLogInteractor(
     override suspend fun handleIntent(intent: WorkoutLogIntent) {
         when (intent) {
             is WorkoutLogIntent.FinishStageClicked -> saveDraftStageIfValid()
+            is WorkoutLogIntent.DeleteStageClicked -> workoutRepository.deleteStage(intent.stageId)
 
             is WorkoutLogIntent.ActiveWorkoutChanged,
             is WorkoutLogIntent.StartWorkoutClicked,
             is WorkoutLogIntent.AddStageClicked,
+            is WorkoutLogIntent.EditStageClicked,
             is WorkoutLogIntent.StageDescriptionChanged,
             is WorkoutLogIntent.ContinueToSetsClicked,
             is WorkoutLogIntent.DraftSetWeightChanged,
@@ -62,10 +64,19 @@ class WorkoutLogInteractor(
             return
         }
 
-        workoutRepository.addStage(
-            description = description,
-            sets = sets,
-        )
+        val editingStageId = currentState.editingStageId
+        if (editingStageId == null) {
+            workoutRepository.addStage(
+                description = description,
+                sets = sets,
+            )
+        } else {
+            workoutRepository.updateStage(
+                stageId = editingStageId,
+                description = description,
+                sets = sets,
+            )
+        }
         emit(WorkoutLogIntent.StageSaved)
     }
 }
@@ -87,6 +98,37 @@ private val workoutLogReducer: Reducer<WorkoutLogIntent, WorkoutLogState> = { in
             stageDescriptionInput = "",
             draftStageDescription = "",
             draftSets = emptyList(),
+            editingStageId = null,
+            validationMessage = null,
+        )
+
+        is WorkoutLogIntent.EditStageClicked -> {
+            val stage = state.workout
+                ?.stages
+                ?.firstOrNull { it.id == intent.stageId }
+
+            if (stage == null) {
+                state
+            } else {
+                state.copy(
+                    screen = WorkoutLogScreenState.StageDescription,
+                    stageDescriptionInput = stage.description,
+                    draftStageDescription = stage.description,
+                    draftSets = stage.sets.map { set ->
+                        WorkoutSetDraft(
+                            localId = set.id,
+                            order = set.order,
+                            weightInput = set.weightKg.formatWeightInput(),
+                            repsInput = set.reps.toString(),
+                        )
+                    },
+                    editingStageId = stage.id,
+                    validationMessage = null,
+                )
+            }
+        }
+
+        is WorkoutLogIntent.DeleteStageClicked -> state.copy(
             validationMessage = null,
         )
 
@@ -103,7 +145,7 @@ private val workoutLogReducer: Reducer<WorkoutLogIntent, WorkoutLogState> = { in
                 state.copy(
                     screen = WorkoutLogScreenState.StageEditor,
                     draftStageDescription = description,
-                    draftSets = listOf(emptyDraftSet(order = 1)),
+                    draftSets = state.draftSets.ifEmpty { listOf(emptyDraftSet(order = 1)) },
                     validationMessage = null,
                 )
             }
@@ -162,6 +204,7 @@ private val workoutLogReducer: Reducer<WorkoutLogIntent, WorkoutLogState> = { in
             stageDescriptionInput = "",
             draftStageDescription = "",
             draftSets = emptyList(),
+            editingStageId = null,
             validationMessage = null,
         )
 
@@ -171,6 +214,9 @@ private val workoutLogReducer: Reducer<WorkoutLogIntent, WorkoutLogState> = { in
             WorkoutLogScreenState.StageDescription -> state.copy(
                 screen = WorkoutLogScreenState.Workout,
                 stageDescriptionInput = "",
+                draftStageDescription = "",
+                draftSets = emptyList(),
+                editingStageId = null,
                 validationMessage = null,
             )
             WorkoutLogScreenState.StageEditor -> state.copy(
@@ -214,4 +260,12 @@ private fun String.onlyDecimalInput(): String {
 
 private fun String.normalizedDecimalOrNull(): Double? {
     return replace(',', '.').toDoubleOrNull()
+}
+
+private fun Double.formatWeightInput(): String {
+    return if (this % 1.0 == 0.0) {
+        toInt().toString()
+    } else {
+        toString()
+    }
 }

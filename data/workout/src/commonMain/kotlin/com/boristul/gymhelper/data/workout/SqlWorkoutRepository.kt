@@ -25,7 +25,12 @@ class SqlWorkoutRepository(
     override suspend fun addStage(description: String, sets: List<WorkoutSet>) {
         val workout = activeWorkout.value
         val nextStageOrder = workout.stages.size + 1
-        val stageId = "${workout.id}-stage-$nextStageOrder"
+        val nextStageId = workout.stages
+            .mapNotNull { it.id.substringAfterLast("-stage-", missingDelimiterValue = "").toIntOrNull() }
+            .maxOrNull()
+            ?.plus(1)
+            ?: 1
+        val stageId = "${workout.id}-stage-$nextStageId"
 
         database.transaction {
             queries.updateWorkoutStatus(
@@ -39,16 +44,39 @@ class SqlWorkoutRepository(
                 position = nextStageOrder.toLong(),
             )
 
-            sets.forEachIndexed { index, set ->
-                val setOrder = index + 1
-                queries.insertWorkoutSet(
-                    id = "$stageId-set-$setOrder",
-                    stage_id = stageId,
-                    position = setOrder.toLong(),
-                    weight_kg = set.weightKg,
-                    reps = set.reps.toLong(),
-                )
-            }
+            insertSets(stageId = stageId, sets = sets)
+        }
+
+        activeWorkout.value = loadActiveWorkout()
+    }
+
+    override suspend fun updateStage(stageId: String, description: String, sets: List<WorkoutSet>) {
+        database.transaction {
+            queries.updateWorkoutStage(
+                description = description,
+                id = stageId,
+            )
+            queries.deleteSetsForStage(stageId)
+            insertSets(stageId = stageId, sets = sets)
+        }
+
+        activeWorkout.value = loadActiveWorkout()
+    }
+
+    override suspend fun deleteStage(stageId: String) {
+        database.transaction {
+            queries.deleteSetsForStage(stageId)
+            queries.deleteWorkoutStage(stageId)
+
+            queries
+                .selectStagesForWorkout(ACTIVE_WORKOUT_ID)
+                .executeAsList()
+                .forEachIndexed { index, stage ->
+                    queries.updateStagePosition(
+                        position = (index + 1).toLong(),
+                        id = stage.id,
+                    )
+                }
         }
 
         activeWorkout.value = loadActiveWorkout()
@@ -96,6 +124,19 @@ class SqlWorkoutRepository(
             status = WorkoutStatus.valueOf(session.status),
             stages = stages,
         )
+    }
+
+    private fun insertSets(stageId: String, sets: List<WorkoutSet>) {
+        sets.forEachIndexed { index, set ->
+            val setOrder = index + 1
+            queries.insertWorkoutSet(
+                id = "$stageId-set-$setOrder",
+                stage_id = stageId,
+                position = setOrder.toLong(),
+                weight_kg = set.weightKg,
+                reps = set.reps.toLong(),
+            )
+        }
     }
 
     private companion object {

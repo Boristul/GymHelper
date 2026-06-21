@@ -17,8 +17,11 @@ fun AppScreenColumn(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(
+                horizontal = AppSpacing.screenHorizontal,
+                vertical = AppSpacing.screenVertical,
+            ),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.item),
     ) {
         content()
     }

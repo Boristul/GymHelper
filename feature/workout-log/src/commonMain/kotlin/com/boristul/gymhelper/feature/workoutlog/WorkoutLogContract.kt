@@ -11,6 +11,7 @@ data class WorkoutLogState(
     val stageDescriptionInput: String = "",
     val draftStageDescription: String = "",
     val draftSets: List<WorkoutSetDraft> = emptyList(),
+    val editingStageId: String? = null,
     val validationMessage: String? = null,
 )
 
@@ -36,6 +37,14 @@ sealed interface WorkoutLogIntent : MviIntent {
     data object StartWorkoutClicked : WorkoutLogIntent
 
     data object AddStageClicked : WorkoutLogIntent
+
+    data class EditStageClicked(
+        val stageId: String,
+    ) : WorkoutLogIntent
+
+    data class DeleteStageClicked(
+        val stageId: String,
+    ) : WorkoutLogIntent
 
     data class StageDescriptionChanged(
         val value: String,
