@@ -154,7 +154,7 @@ private val workoutLogReducer: Reducer<WorkoutLogIntent, WorkoutLogState> = { in
         is WorkoutLogIntent.DraftSetWeightChanged -> state.copy(
             draftSets = state.draftSets.map { draft ->
                 if (draft.localId == intent.localId) {
-                    draft.copy(weightInput = intent.value.onlyDecimalInput())
+                    draft.copy(weightInput = intent.value.onlyDecimalInput().take(MAX_WEIGHT_INPUT_LENGTH))
                 } else {
                     draft
                 }
@@ -165,7 +165,7 @@ private val workoutLogReducer: Reducer<WorkoutLogIntent, WorkoutLogState> = { in
         is WorkoutLogIntent.DraftSetRepsChanged -> state.copy(
             draftSets = state.draftSets.map { draft ->
                 if (draft.localId == intent.localId) {
-                    draft.copy(repsInput = intent.value.filter(Char::isDigit))
+                    draft.copy(repsInput = intent.value.filter(Char::isDigit).take(MAX_REPS_INPUT_LENGTH))
                 } else {
                     draft
                 }
@@ -257,6 +257,9 @@ private fun String.onlyDecimalInput(): String {
         }
     }
 }
+
+private const val MAX_WEIGHT_INPUT_LENGTH = 6
+private const val MAX_REPS_INPUT_LENGTH = 3
 
 private fun String.normalizedDecimalOrNull(): Double? {
     return replace(',', '.').toDoubleOrNull()

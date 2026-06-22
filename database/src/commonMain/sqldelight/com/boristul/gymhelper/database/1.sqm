@@ -1,0 +1,5 @@
+CREATE TABLE body_weight_entry (
+    id TEXT NOT NULL PRIMARY KEY,
+    entry_date TEXT NOT NULL UNIQUE,
+    weight_kg REAL NOT NULL
+);

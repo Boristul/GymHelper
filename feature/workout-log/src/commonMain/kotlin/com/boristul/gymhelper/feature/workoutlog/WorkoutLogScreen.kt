@@ -19,6 +19,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -142,7 +148,7 @@ private fun HomeContent(
         title = "GymHelper",
         subtitle = "Training log",
         bottomBar = {
-            AppBottomActions {
+            AppBottomActions(navigationBarsPadding = false) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onStartWorkout,
@@ -155,17 +161,33 @@ private fun HomeContent(
         AppScreenColumn(
             modifier = Modifier.padding(contentPadding),
         ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ) {
+                Column(
+                    modifier = Modifier.padding(AppSpacing.section),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.compact),
+                ) {
+                    Text(
+                        text = "Today's session",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Text(
+                        text = if (stagesCount == 0) "Ready to log" else "$stagesCount stages",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "Add exercises, sets, reps, and weight without leaving the flow.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
             Text(
-                text = if (stagesCount == 0) {
-                    "No stages in today's workout yet"
-                } else {
-                    "$stagesCount stages in today's workout"
-                },
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = "Start a local workout, add stages, and record sets with weight and reps.",
+                text = "Training log stays local and focused on the next action.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -188,7 +210,7 @@ private fun WorkoutOverviewContent(
         subtitle = "${workout.stages.size} stages",
         onBack = onBack,
         bottomBar = {
-            AppBottomActions {
+            AppBottomActions(navigationBarsPadding = false) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onAddStage,
@@ -256,7 +278,7 @@ private fun StageDescriptionContent(
         subtitle = "Describe the exercise, machine, or block",
         onBack = onBack,
         bottomBar = {
-            AppBottomActions {
+            AppBottomActions(navigationBarsPadding = false) {
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onContinue,
@@ -311,7 +333,7 @@ private fun StageEditorContent(
         subtitle = "Add working sets",
         onBack = onBack,
         bottomBar = {
-            AppBottomActions {
+            AppBottomActions(navigationBarsPadding = false) {
                 OutlinedButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onAddSet,
@@ -346,9 +368,7 @@ private fun StageEditorContent(
                 val isLastDraft = draft.localId == state.draftSets.lastOrNull()?.localId
                 val focusTarget = when {
                     !isLastDraft -> null
-                    draft.order == 1 && draft.weightInput.isBlank() && draft.repsInput.isBlank() -> {
-                        DraftSetFocusTarget.Weight
-                    }
+                    draft.order == 1 -> DraftSetFocusTarget.Weight
                     else -> DraftSetFocusTarget.Reps
                 }
 
@@ -368,9 +388,9 @@ private fun StageEditorContent(
 private fun EmptyWorkoutCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
         Column(
@@ -399,40 +419,48 @@ private fun StageCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
     ) {
         Column(
             modifier = Modifier.padding(AppSpacing.section),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.item),
         ) {
-            Text(
-                text = stage.description,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.compact),
+            ) {
+                Text(
+                    text = stage.description,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(top = 10.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = AppEditIcon,
+                            contentDescription = "Edit stage",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = AppDeleteIcon,
+                            contentDescription = "Delete stage",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
             Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.compact)) {
                 stage.sets.forEach { set ->
                     SavedSetRow(set = set)
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.compact),
-            ) {
-                OutlinedButton(
-                    modifier = Modifier.weight(1f),
-                    onClick = onEdit,
-                ) {
-                    Text("Edit")
-                }
-                TextButton(
-                    modifier = Modifier.weight(1f),
-                    onClick = onDelete,
-                ) {
-                    Text("Delete")
                 }
             }
         }
@@ -478,7 +506,7 @@ private fun DraftSetCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ),
@@ -502,8 +530,9 @@ private fun DraftSetCard(
                         .focusRequester(weightFocusRequester),
                     value = weightFieldValue,
                     onValueChange = { value ->
-                        weightFieldValue = value
-                        onWeightChange(value.text)
+                        val limitedValue = value.limitedTo(MAX_WEIGHT_INPUT_LENGTH)
+                        weightFieldValue = limitedValue
+                        onWeightChange(limitedValue.text)
                     },
                     label = { Text("Weight") },
                     suffix = { Text("kg") },
@@ -522,8 +551,9 @@ private fun DraftSetCard(
                         .focusRequester(repsFocusRequester),
                     value = repsFieldValue,
                     onValueChange = { value ->
-                        repsFieldValue = value
-                        onRepsChange(value.text)
+                        val limitedValue = value.limitedTo(MAX_REPS_INPUT_LENGTH)
+                        repsFieldValue = limitedValue
+                        onRepsChange(limitedValue.text)
                     },
                     label = { Text("Reps") },
                     singleLine = true,
@@ -546,7 +576,7 @@ private fun SavedSetRow(set: WorkoutSet) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
                 shape = RoundedCornerShape(8.dp),
             )
             .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -584,3 +614,73 @@ private fun String.asTextFieldValueAtEnd(): TextFieldValue {
         selection = TextRange(length),
     )
 }
+
+private fun TextFieldValue.limitedTo(maxLength: Int): TextFieldValue {
+    if (text.length <= maxLength) {
+        return this
+    }
+
+    val limitedText = text.take(maxLength)
+    return copy(
+        text = limitedText,
+        selection = TextRange(selection.start.coerceAtMost(limitedText.length)),
+    )
+}
+
+private const val MAX_WEIGHT_INPUT_LENGTH = 6
+private const val MAX_REPS_INPUT_LENGTH = 3
+
+private val AppEditIcon: ImageVector = ImageVector.Builder(
+    name = "AppEditIcon",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f,
+).apply {
+    path(fill = SolidColor(Color.Black)) {
+        moveTo(4f, 17.25f)
+        verticalLineTo(20f)
+        horizontalLineTo(6.75f)
+        lineTo(17.81f, 8.94f)
+        lineTo(15.06f, 6.19f)
+        lineTo(4f, 17.25f)
+        close()
+        moveTo(19.71f, 7.04f)
+        curveTo(20.1f, 6.65f, 20.1f, 6.02f, 19.71f, 5.63f)
+        lineTo(18.37f, 4.29f)
+        curveTo(17.98f, 3.9f, 17.35f, 3.9f, 16.96f, 4.29f)
+        lineTo(15.91f, 5.34f)
+        lineTo(18.66f, 8.09f)
+        lineTo(19.71f, 7.04f)
+        close()
+    }
+}.build()
+
+private val AppDeleteIcon: ImageVector = ImageVector.Builder(
+    name = "AppDeleteIcon",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f,
+).apply {
+    path(fill = SolidColor(Color.Black)) {
+        moveTo(6f, 19f)
+        curveTo(6f, 20.1f, 6.9f, 21f, 8f, 21f)
+        horizontalLineTo(16f)
+        curveTo(17.1f, 21f, 18f, 20.1f, 18f, 19f)
+        verticalLineTo(7f)
+        horizontalLineTo(6f)
+        verticalLineTo(19f)
+        close()
+        moveTo(8f, 4f)
+        lineTo(9f, 3f)
+        horizontalLineTo(15f)
+        lineTo(16f, 4f)
+        horizontalLineTo(20f)
+        verticalLineTo(6f)
+        horizontalLineTo(4f)
+        verticalLineTo(4f)
+        horizontalLineTo(8f)
+        close()
+    }
+}.build()

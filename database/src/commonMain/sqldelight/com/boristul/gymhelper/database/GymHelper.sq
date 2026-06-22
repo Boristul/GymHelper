@@ -19,6 +19,12 @@ CREATE TABLE workout_set (
     reps INTEGER NOT NULL
 );
 
+CREATE TABLE body_weight_entry (
+    id TEXT NOT NULL PRIMARY KEY,
+    entry_date TEXT NOT NULL UNIQUE,
+    weight_kg REAL NOT NULL
+);
+
 selectWorkoutSession:
 SELECT *
 FROM workout_session
@@ -70,3 +76,16 @@ WHERE stage_id = ?;
 insertWorkoutSet:
 INSERT INTO workout_set(id, stage_id, position, weight_kg, reps)
 VALUES (?, ?, ?, ?, ?);
+
+selectBodyWeightEntries:
+SELECT *
+FROM body_weight_entry
+ORDER BY entry_date DESC;
+
+upsertTodayBodyWeight:
+INSERT OR REPLACE INTO body_weight_entry(id, entry_date, weight_kg)
+VALUES ('body-weight-' || date('now', 'localtime'), date('now', 'localtime'), ?);
+
+deleteBodyWeightEntry:
+DELETE FROM body_weight_entry
+WHERE id = ?;

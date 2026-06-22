@@ -14,17 +14,24 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun AppBottomActions(
+    navigationBarsPadding: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val bottomPaddingModifier = if (navigationBarsPadding) {
+        Modifier.navigationBarsPadding()
+    } else {
+        Modifier
+    }
+
     Surface(
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = AppSpacing.compact,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .imePadding()
-                .navigationBarsPadding()
+                .then(bottomPaddingModifier)
                 .padding(
                     horizontal = AppSpacing.screenHorizontal,
                     vertical = AppSpacing.item,
